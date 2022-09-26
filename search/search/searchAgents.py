@@ -578,7 +578,7 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     food_candidates = foodGrid.asList()
-
+    "*** YOUR CODE HERE ***"
     def minmanhattan(food_candidates, pos):
 
         if len(food_candidates) == 0:
@@ -590,7 +590,6 @@ def foodHeuristic(state, problem):
             hn.append(dis)
 
         return min(hn)
-    "*** YOUR CODE HERE ***"
 
     return minmanhattan(food_candidates, position)
 
@@ -627,6 +626,7 @@ class ClosestDotSearchAgent(SearchAgent):
         problem = AnyFoodSearchProblem(gameState)
 
         "*** YOUR CODE HERE ***"
+        return search.bfs(problem)
 
 
 class AnyFoodSearchProblem(PositionSearchProblem):
@@ -663,6 +663,7 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         x, y = state
 
         "*** YOUR CODE HERE ***"
+        return self.food[x][y] == True
 
 
 def mazeDistance(point1, point2, gameState):
