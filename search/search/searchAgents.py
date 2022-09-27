@@ -311,6 +311,157 @@ def euclideanHeuristic(position, problem, info={}):
 #####################################################
 
 
+class CornersProblem(search.SearchProblem):
+    """
+    This search problem finds paths through all four corners of a layout.
+
+    You must select a suitable state space and child function
+    """
+
+    def __init__(self, startingGameState):
+        """
+        Stores the walls, pacman's starting position and corners.
+        """
+        self.walls = startingGameState.getWalls()
+        self.startingPosition = startingGameState.getPacmanPosition()
+        top, right = self.walls.height-2, self.walls.width-2
+        self.corners = ((1, 1), (1, top), (right, 1), (right, top))
+        for corner in self.corners:
+            if not startingGameState.hasFood(*corner):
+                print('Warning: no food in corner ' + str(corner))
+        self._expanded = 0  # DO NOT CHANGE; Number of search nodes expanded
+        # Please add any code here which you would like to use
+        # in initializing the problem
+        "*** YOUR CODE HERE ***"
+
+    def getStartState(self):
+        """
+        Returns the start state (in your state space, not the full Pacman state
+        space)
+        """
+        "*** YOUR CODE HERE ***"
+        return (self.startingPosition, [])
+
+    def isGoalState(self, state):
+        """
+        Returns whether this search state is a goal state of the problem.
+        """
+        "*** YOUR CODE HERE ***"
+        return len(state[1]) == 4
+
+    def expand(self, state):
+        """
+        Returns child states, the actions they require, and a cost of 1.
+
+         As noted in search.py:
+            For a given state, this should return a list of triples, (child,
+            action, stepCost), where 'child' is a child to the current
+            state, 'action' is the action required to get there, and 'stepCost'
+            is the incremental cost of expanding to that child
+        """
+
+        children = []
+        for action in self.getActions(state):
+            # Add a child state to the child list if the action is legal
+            # You should call getActions, getActionCost, and getNextState.
+            "*** YOUR CODE HERE ***"
+            next_state = self.getNextState(state, action)
+            tmp_cost = self.getActionCost(state, action, next_state)
+            children.append((next_state, action, tmp_cost))
+
+        self._expanded += 1  # DO NOT CHANGE
+        return children
+
+    def getActions(self, state):
+        possible_directions = [Directions.NORTH,
+                               Directions.SOUTH, Directions.EAST, Directions.WEST]
+        valid_actions_from_state = []
+        for action in possible_directions:
+            x, y = state[0]
+            dx, dy = Actions.directionToVector(action)
+            nextx, nexty = int(x + dx), int(y + dy)
+            if not self.walls[nextx][nexty]:
+                valid_actions_from_state.append(action)
+        return valid_actions_from_state
+
+    def getActionCost(self, state, action, next_state):
+        assert next_state == self.getNextState(state, action), (
+            "Invalid next state passed to getActionCost().")
+        return 1
+
+    def getNextState(self, state, action):
+        assert action in self.getActions(state), (
+            "Invalid action passed to getActionCost().")
+        x, y = state[0]
+        dx, dy = Actions.directionToVector(action)
+        nextx, nexty = int(x + dx), int(y + dy)
+        "*** YOUR CODE HERE ***"
+        # you will need to replace the None part of the following tuple.
+        if not self.walls[nextx][nexty]:
+            visited = list(state[1])
+            if (nextx, nexty) in self.corners and (nextx, nexty) not in visited:
+                visited.append((nextx, nexty))
+
+        return ((nextx, nexty), visited)
+
+    def getCostOfActionSequence(self, actions):
+        """
+        Returns the cost of a particular sequence of actions.  If those actions
+        include an illegal move, return 999999.  This is implemented for you.
+        """
+        if actions == None:
+            return 999999
+        x, y = self.startingPosition
+        for action in actions:
+            dx, dy = Actions.directionToVector(action)
+            x, y = int(x + dx), int(y + dy)
+            if self.walls[x][y]:
+                return 999999
+        return len(actions)
+
+
+def cornersHeuristic(state, problem):
+    """
+    A heuristic for the CornersProblem that you defined.
+
+      state:   The current search state
+               (a data structure you chose in your search problem)
+
+      problem: The CornersProblem instance for this layout.
+
+    This function should always return a number that is a lower bound on the
+    shortest path from the state to a goal of the problem; i.e.  it should be
+    admissible (as well as consistent).
+    """
+    corners = problem.corners  # These are the corner coordinates
+    # These are the walls of the maze, as a Grid (game.py)
+    walls = problem.walls
+    pos = state[0]
+
+    def minmanhattan(corners, pos):
+        if len(corners) == 0:
+            return 0
+
+        hn = []
+        for loc in corners:
+            dis = abs(loc[0] - pos[0]) + abs(loc[1] - pos[1])
+            hn.append(dis)
+
+        return min(hn)
+
+    "*** YOUR CODE HERE ***"
+    return minmanhattan(corners, pos)
+
+
+class AStarCornersAgent(SearchAgent):
+    "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
+
+    def __init__(self):
+        self.searchFunction = lambda prob: search.aStarSearch(
+            prob, cornersHeuristic)
+        self.searchType = CornersProblem
+
+
 class food_candidatesProblem(search.SearchProblem):
     """
     This search problem finds paths through all four food_candidates of a layout.
